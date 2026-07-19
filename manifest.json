@@ -1,0 +1,14 @@
+{
+  "name": "VESPER — One tap. Infinite fall.",
+  "short_name": "VESPER",
+  "description": "A one-touch arcade survival game that runs entirely in your browser.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#05060c",
+  "theme_color": "#05060c",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
