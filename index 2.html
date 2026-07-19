@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>VESPER — One tap. Infinite fall.</title>
+<meta name="description" content="VESPER is a fast one-touch arcade survival game. Dodge, dash and chase the highest combo in an endless neon descent. Free to play, right in your browser.">
+<meta name="theme-color" content="#05060c">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta property="og:title" content="VESPER — One tap. Infinite fall.">
+<meta property="og:description" content="A one-touch arcade survival game. How far can you fall?">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="dark" data-quality="high">
+
+<!-- ================= LOADING SCREEN ================= -->
+<div id="loader" aria-hidden="true">
+  <div class="loader-mark">
+    <svg viewBox="0 0 100 100" class="loader-ring">
+      <circle cx="50" cy="50" r="42"></circle>
+    </svg>
+    <span class="loader-word">VESPER</span>
+  </div>
+  <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
+  <p class="loader-tip" id="loaderTip">tip: hold to jump higher</p>
+</div>
+
+<!-- ================= AMBIENT BACKGROUND ================= -->
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+<div class="mouse-glow" id="mouseGlow" aria-hidden="true"></div>
+
+<!-- ================= NAV ================= -->
+<header class="site-nav" id="siteNav">
+  <a href="#top" class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-word">VESPER</span>
+  </a>
+  <nav class="nav-links" aria-label="Primary">
+    <a href="#play">Play</a>
+    <a href="#progress">Progress</a>
+    <a href="#scores">High Scores</a>
+    <a href="#news">Patch Notes</a>
+  </nav>
+  <div class="nav-actions">
+    <button class="icon-btn" id="muteToggle" title="Mute" aria-label="Toggle sound">
+      <svg viewBox="0 0 24 24" class="icon-vol-on"><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M19 6a9 9 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+      <svg viewBox="0 0 24 24" class="icon-vol-off" hidden><path d="M4 9v6h4l5 5V4L8 9H4z"/><path d="M16 9l5 5M21 9l-5 5" stroke="currentColor" stroke-width="1.8"/></svg>
+    </button>
+    <button class="icon-btn" id="settingsToggle" title="Settings" aria-label="Open settings">
+      <svg viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zm8.4 3.5a8 8 0 0 0-.13-1.44l1.85-1.45-1.9-3.3-2.19.74a8 8 0 0 0-1.24-.72L16.4 3h-3.8l-.4 2.33a8 8 0 0 0-1.24.72l-2.19-.74-1.9 3.3 1.85 1.45c-.09.47-.13.95-.13 1.44s.04.97.13 1.44l-1.85 1.45 1.9 3.3 2.19-.74c.38.29.8.53 1.24.72L12.6 21h3.8l.4-2.33c.44-.19.86-.43 1.24-.72l2.19.74 1.9-3.3-1.85-1.45c.09-.47.13-.95.13-1.44z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="btn btn-ghost" id="navPlayBtn">Play</button>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">an original one-touch arcade survival game</p>
+    <h1 class="hero-title">
+      <span class="pulse-ring" aria-hidden="true"></span>
+      VESPER
+    </h1>
+    <p class="hero-tag">One tap. Infinite fall.</p>
+    <p class="hero-desc">Dive through a collapsing neon shaft. Dodge the dark, chain your combo, and see how long the void will let you fall.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-primary btn-lg" id="heroPlayBtn">
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M6 4l14 8-14 8V4z" fill="currentColor"/></svg>
+        Play Now
+      </button>
+      <a href="#news" class="btn btn-outline btn-lg">What's new</a>
+    </div>
+    <div class="hero-stats" id="heroStats">
+      <div class="hstat"><span class="hstat-num" data-count="0" data-target="0" id="statBest">0</span><span class="hstat-label">Best Score</span></div>
+      <div class="hstat"><span class="hstat-num" data-count="0" data-target="0" id="statRuns">0</span><span class="hstat-label">Runs Played</span></div>
+      <div class="hstat"><span class="hstat-num" data-count="0" data-target="0" id="statCoins">0</span><span class="hstat-label">Shards Collected</span></div>
+      <div class="hstat"><span class="hstat-num" data-count="0" data-target="0" id="statLevel">1</span><span class="hstat-label">Pilot Level</span></div>
+    </div>
+  </div>
+  <div class="hero-shot" aria-hidden="true">
+    <div class="shot-frame glass">
+      <canvas id="heroPreview"></canvas>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true"><span></span></div>
+</section>
+
+<!-- ================= GAME ================= -->
+<section class="game-section" id="play">
+  <div class="game-shell glass">
+
+    <div class="game-topbar">
+      <div class="game-readout">
+        <div class="readout-item"><span class="readout-label">Score</span><span class="readout-val" id="hudScore">0</span></div>
+        <div class="readout-item"><span class="readout-label">Best</span><span class="readout-val" id="hudBest">0</span></div>
+        <div class="readout-item combo-item"><span class="readout-label">Combo</span><span class="readout-val" id="hudCombo">×1</span></div>
+        <div class="readout-item"><span class="readout-label">Shards</span><span class="readout-val" id="hudCoins">0</span></div>
+      </div>
+      <div class="game-topbar-actions">
+        <span class="fps-counter" id="fpsCounter" hidden>60 fps</span>
+        <button class="icon-btn" id="pauseBtn" title="Pause" aria-label="Pause">
+          <svg viewBox="0 0 24 24"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>
+        </button>
+        <button class="icon-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Toggle fullscreen">
+          <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="game-viewport" id="gameViewport">
+      <canvas id="gameCanvas"></canvas>
+
+      <!-- power-up bar -->
+      <div class="powerup-bar" id="powerupBar"></div>
+
+      <!-- Start overlay -->
+      <div class="overlay" id="startOverlay">
+        <div class="overlay-card">
+          <p class="overlay-eyebrow">Shaft 01 — The Approach</p>
+          <h2>Ready to fall?</h2>
+          <p class="overlay-desc">Tap, click or press <kbd>Space</kbd> to rise. Let go to fall. Thread the gates, grab shards, and don't touch the dark.</p>
+          <button class="btn btn-primary btn-lg" id="startBtn">Start Run</button>
+          <div class="overlay-controls">
+            <span><kbd>Space</kbd> / <kbd>↑</kbd> jump</span>
+            <span><kbd>Tap</kbd> / <kbd>Click</kbd> jump</span>
+            <span><kbd>Esc</kbd> pause</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pause overlay -->
+      <div class="overlay" id="pauseOverlay" hidden>
+        <div class="overlay-card">
+          <h2>Paused</h2>
+          <button class="btn btn-primary btn-lg" id="resumeBtn">Resume</button>
+          <button class="btn btn-outline" id="restartFromPauseBtn">Restart Run</button>
+          <div class="overlay-controls"><span>Press <kbd>Esc</kbd> to resume</span></div>
+        </div>
+      </div>
+
+      <!-- Game over overlay -->
+      <div class="overlay" id="gameOverOverlay" hidden>
+        <div class="overlay-card">
+          <p class="overlay-eyebrow" id="gameOverBanner">Run Ended</p>
+          <h2 id="gameOverTitle">The void caught you</h2>
+          <div class="result-grid">
+            <div class="result-item"><span class="result-num" id="resultScore">0</span><span>Score</span></div>
+            <div class="result-item"><span class="result-num" id="resultCoins">0</span><span>Shards</span></div>
+            <div class="result-item"><span class="result-num" id="resultCombo">×1</span><span>Best Combo</span></div>
+            <div class="result-item"><span class="result-num" id="resultXP">+0</span><span>XP Earned</span></div>
+          </div>
+          <p class="new-best" id="newBestFlag" hidden>New Best Score!</p>
+          <div class="overlay-btn-row">
+            <button class="btn btn-primary btn-lg" id="retryBtn">Fall Again</button>
+            <button class="btn btn-outline" id="shareBtn">Share Score</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-bottombar">
+      <div class="lives-shield" id="shieldIndicator" hidden>
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2l8 3v6c0 5-3.4 8.7-8 11-4.6-2.3-8-6-8-11V5l8-3z" fill="currentColor"/></svg>
+        Shield active
+      </div>
+      <p class="game-hint">Match the gate glow to pass clean and keep your combo alive.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROGRESS: daily / achievements ================= -->
+<section class="progress-section" id="progress">
+  <div class="section-head">
+    <p class="eyebrow">progress</p>
+    <h2>Every run counts toward something</h2>
+  </div>
+  <div class="progress-grid">
+
+    <div class="card glass daily-card">
+      <div class="card-head">
+        <h3>Daily Challenge</h3>
+        <span class="card-tag" id="dailyDate">—</span>
+      </div>
+      <p class="daily-desc" id="dailyDesc">Loading today's challenge…</p>
+      <div class="daily-progress">
+        <div class="daily-bar"><div class="daily-bar-fill" id="dailyFill"></div></div>
+        <span id="dailyProgressText">0 / 0</span>
+      </div>
+      <div class="daily-reward" id="dailyReward">Reward: 0 shards</div>
+    </div>
+
+    <div class="card glass level-card">
+      <div class="card-head">
+        <h3>Pilot Level</h3>
+        <span class="card-tag" id="levelTag">Lv. 1</span>
+      </div>
+      <div class="xp-bar"><div class="xp-bar-fill" id="xpFill"></div></div>
+      <p class="xp-text" id="xpText">0 / 100 XP</p>
+      <p class="level-skin-note" id="levelSkinNote">Reach Lv. 2 to unlock a new skin.</p>
+    </div>
+
+    <div class="card glass achievements-card">
+      <div class="card-head">
+        <h3>Achievements</h3>
+        <span class="card-tag" id="achieveCount">0 / 0</span>
+      </div>
+      <ul class="achieve-list" id="achieveList"></ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================= HIGH SCORES ================= -->
+<section class="scores-section" id="scores">
+  <div class="section-head">
+    <p class="eyebrow">this device</p>
+    <h2>Your High Scores</h2>
+    <p class="section-sub">VESPER runs entirely in your browser — scores below are saved locally on this device, ranked by your best runs.</p>
+  </div>
+  <div class="scores-table glass" id="scoresTable">
+    <div class="scores-empty" id="scoresEmpty">No runs yet. Play your first game to set a record.</div>
+  </div>
+</section>
+
+<!-- ================= NEWS / PATCH NOTES ================= -->
+<section class="news-section" id="news">
+  <div class="section-head">
+    <p class="eyebrow">patch notes</p>
+    <h2>What's new in VESPER</h2>
+  </div>
+  <div class="news-grid">
+    <article class="card glass news-card">
+      <span class="card-tag">v1.3 — Current</span>
+      <h3>Dash Ability &amp; Screen Shake</h3>
+      <p>Added the Dash power-up for a short burst of invincible speed, tuned screen shake and slow-motion on near misses, and rebalanced gate spacing at high speed.</p>
+    </article>
+    <article class="card glass news-card">
+      <span class="card-tag">v1.2</span>
+      <h3>Skins, Levels &amp; Daily Challenges</h3>
+      <p>Introduced the pilot leveling system, three unlockable skins, and a new daily challenge that resets every day with its own shard reward.</p>
+    </article>
+    <article class="card glass news-card">
+      <span class="card-tag">v1.1</span>
+      <h3>Combo System</h3>
+      <p>Chained shard pickups now build a score multiplier. Miss a gate and the chain resets — risk it for the bigger number.</p>
+    </article>
+    <article class="card glass news-card">
+      <span class="card-tag">v1.0</span>
+      <h3>First Descent</h3>
+      <p>VESPER launches with core one-touch flight, procedurally generated gates and spikes, and full offline play.</p>
+    </article>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= FOOTER ================= -->
+<footer class="site-footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-word">VESPER</span>
+    </div>
+    <p class="footer-tag">A free browser game. No install, no account, no ads.</p>
+  </div>
+  <div class="footer-links">
+    <button class="link-btn" data-modal="aboutModal">About</button>
+    <button class="link-btn" data-modal="creditsModal">Credits</button>
+    <button class="link-btn" data-modal="privacyModal">Privacy</button>
+    <button class="link-btn" id="resetProgressBtn">Reset Progress</button>
+  </div>
+  <p class="footer-copy">Built as a static, offline-capable web game. Runs entirely on your device.</p>
+</footer>
+
+<!-- ================= TOASTS ================= -->
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<!-- ================= CONFETTI CANVAS ================= -->
+<canvas id="confettiCanvas" aria-hidden="true"></canvas>
+
+<!-- ================= SETTINGS MODAL ================= -->
+<div class="modal-backdrop" id="settingsModal" hidden>
+  <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-head">
+      <h3 id="settingsTitle">Settings</h3>
+      <button class="icon-btn" data-close-modal>✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-row">
+        <label for="themeSelect">Appearance</label>
+        <select id="themeSelect">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="qualitySelect">Graphics quality</label>
+        <select id="qualitySelect">
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low (best performance)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="fpsToggle">Show FPS counter</label>
+        <input type="checkbox" id="fpsToggle">
+      </div>
+      <div class="setting-row">
+        <label for="volumeRange">Sound volume</label>
+        <input type="range" id="volumeRange" min="0" max="100" value="70">
+      </div>
+      <div class="setting-row">
+        <label for="muteCheck">Mute all sound</label>
+        <input type="checkbox" id="muteCheck">
+      </div>
+      <div class="setting-row">
+        <label for="vibrateToggle">Mobile vibration</label>
+        <input type="checkbox" id="vibrateToggle" checked>
+      </div>
+      <hr>
+      <button class="btn btn-outline btn-block" id="settingsResetBtn">Reset all progress &amp; settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ABOUT MODAL ================= -->
+<div class="modal-backdrop" id="aboutModal" hidden>
+  <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="modal-head"><h3 id="aboutTitle">About VESPER</h3><button class="icon-btn" data-close-modal>✕</button></div>
+    <div class="modal-body">
+      <p>VESPER is a one-touch arcade survival game built to run entirely in the browser — no install, no account, no server. Every shard, every high score and every unlocked skin lives in your device's local storage.</p>
+      <p>The pitch was simple: take the instant readability of one-touch classics, the tight hitboxes of a hardcore dodger, and the escalating tension of a survival loop, then wrap it in a shaft you fall through forever. There's no ending to reach — only a further personal best.</p>
+      <p>Built with plain HTML, CSS and JavaScript. No game engine, no build step.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CREDITS MODAL ================= -->
+<div class="modal-backdrop" id="creditsModal" hidden>
+  <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="creditsTitle">
+    <div class="modal-head"><h3 id="creditsTitle">Credits</h3><button class="icon-btn" data-close-modal>✕</button></div>
+    <div class="modal-body">
+      <ul class="credits-list">
+        <li><strong>Design &amp; Direction</strong><span>Vesper Studio</span></li>
+        <li><strong>Engineering</strong><span>Vesper Studio</span></li>
+        <li><strong>Audio</strong><span>Synthesized in-browser via the Web Audio API — no sample libraries</span></li>
+        <li><strong>Typography</strong><span>System font stack, tuned for this project</span></li>
+        <li><strong>Special thanks</strong><span>Everyone who fell one more time to beat their best</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PRIVACY MODAL ================= -->
+<div class="modal-backdrop" id="privacyModal" hidden>
+  <div class="modal glass" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+    <div class="modal-head"><h3 id="privacyTitle">Privacy</h3><button class="icon-btn" data-close-modal>✕</button></div>
+    <div class="modal-body">
+      <p>VESPER collects nothing. There is no server, no analytics, and no account system.</p>
+      <p>Your scores, coins, XP, achievements and settings are stored only in your browser's local storage, on your device. Clearing your browser data or using "Reset Progress" removes it permanently. Nothing is ever transmitted anywhere.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ACHIEVEMENT / EASTER EGG TOAST TEMPLATE (JS-driven) ================= -->
+
+<script src="js/audio.js"></script>
+<script src="js/particles.js"></script>
+<script src="js/game.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
